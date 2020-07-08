@@ -1,2 +1,2 @@
 # gpu_monitor
-minimal version of 
+Minimal version of a gpu monitor for the deep-gpu-* machines.
