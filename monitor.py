@@ -50,25 +50,32 @@ if __name__ == '__main__':
         pswd = fp.read().rstrip()
 
     nvmlInit()
-    while True:
+    df = pd.DataFrame(columns=['node', 'GPUs used' , 'Free GPUs', 'Memory Utilization', 'GPU utilization (only taken)', 'CPU utilization', ''])
 
-        df = pd.DataFrame(columns=['node', 'GPUs used' , 'Free GPUs', 'Memory Utilization', 'GPU utilization (only taken)', 'CPU utilization', ''])
-
-        list_machines = ['deep-gpu-1', 'deep-gpu-2', 'deep-gpu-3', 'deep-gpu-4', 'deep-gpu-5', 'deep-gpu-6', 'deep-gpu-7', 'deep-gpu-8', 'deep-gpu-9', 'deep-gpu-10']
-        ssh_clients = []
-        for machine in list_machines:
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=machine,username='krisgrg', password=pswd)
-            ssh_clients.append(ssh_client)
+    list_machines = ['deep-gpu-1', 'deep-gpu-2', 'deep-gpu-3', 'deep-gpu-4', 'deep-gpu-5', 'deep-gpu-6', 'deep-gpu-7', 'deep-gpu-8', 'deep-gpu-9', 'deep-gpu-10']
+    ssh_clients = []
+    for machine in list_machines:
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_client.connect(hostname=machine,username='krisgrg', password=pswd)
+        ssh_clients.append(ssh_client)
     
-
+    while True:
         # unfortunately, ssh_clients are not pickle-able, so multiprocessing can't be used, unless we establish the ssh connection inside every time
         # with Pool(processes=len(list_machines)) as p:
         #     dfs  = p.starmap(populate_df, [(client, list_machines[i]) for (i, client) in enumerate(ssh_clients)])
 
         for (i, ssh_client) in enumerate(ssh_clients):
-            populate_df(ssh_client, list_machines[i])
+            try:
+                populate_df(ssh_client, list_machines[i])
+            except:
+                print('timeout')
+                ssh_clients = []
+                for machine in list_machines:
+                    ssh_client = paramiko.SSHClient()
+                    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    ssh_client.connect(hostname=machine,username='krisgrg', password=pswd)
+                    ssh_clients.append(ssh_client)
         
         html_table = df.to_html(index=False)
 
@@ -94,6 +101,6 @@ if __name__ == '__main__':
         {datetime.now().__str__()} UTC  \
             <script src='color.js'></script>\
         </body>"
-        with open('/afs/csail.mit.edu/u/k/krisgrg/public_html/cluster.html', 'w') as fp:
+        with open('/data/theory/robustopt/gpu_monitor/cluster.html', 'w') as fp:
             fp.write(html_str)
 
