@@ -1,17 +1,15 @@
-# gpu_monitor
+# GPU Monitor
 Minimal version of a gpu monitor for the deep-gpu-* machines.
 
-Uses paramiko to ssh into machines and pynvml/py3nvml to get gpu info.
+Uses the tool from 
+https://github.com/rossumai/nvgpu
+with an additional column for memory usage, added as in [this PR](https://github.com/rossumai/nvgpu/pull/16)
 
-Updates `/afs/csail.mit.edu/u/k/krisgrg/public_html/cluster.html` which is
-served on
+Updates `/data/theory/robustopt/gpu_monitor/gpu_monitor.html` which is served on https://people.csail.mit.edu/krisgrg/gpu_monitor.html
 
-https://people.csail.mit.edu/krisgrg/cluster.html
+# To run
+On each machine run `FLASK_APP=nvgpu.webapp nohup flask run --host 0.0.0.0 --port 1080 >> flask-deep-gpu-<n>.log 2>&1 &`
+from `/data/theory/robustopt/gpu_monitor/flask_logs`
 
+Then run `nohup python nvgpu_combine.py >> flask_logs/flask-master.log 2>&1 &` from `/data/theory/robustopt/gpu_monitor/` (the original combination using flask from the repo didn't work for me, hence this combine script)
 
-color.js sits in afs as well, duplicated here for versioning. 
-
-conda create --name <env> --file requirements.txt 
-and then pip install-ing pynvml and py3nvml
-
-should give a working setup
